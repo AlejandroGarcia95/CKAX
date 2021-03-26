@@ -1,0 +1,157 @@
+#!/usr/bin/python3
+
+import configparser
+import random
+import os
+import time
+import textwrap
+
+TASKS_FILE = os.getenv('TASKS_FILE', default='tasks')
+TASKS_AMOUNT = int(os.getenv('TASKS_AMOUNT', default='5'))
+
+
+def parse_tasks_data(tasks_file):
+    parser = configparser.ConfigParser()
+    parser.read(tasks_file)
+    return { s: dict(parser.items(s)) for s in parser.sections() }
+
+
+def get_topics(tasks_data):
+    return list(tasks_data.keys())
+
+
+def get_topic_weight(tasks_data, topic):
+    return float(tasks_data.get(topic, {}).get('weight', 1))
+
+
+def get_topic_tasks(tasks_data, topic):
+    topic_data = tasks_data.get(topic, {})
+    topic_tasks = []
+    for k in topic_data:
+        if k.startswith('t') and k[1:].isdigit():
+            topic_tasks.append(topic_data[k])
+    return topic_tasks
+
+
+def choose_random_topic(tasks_data):
+    topics = get_topics(tasks_data)
+    topics_weights = [ get_topic_weight(tasks_data, t) for t in topics ]
+    return random.choices(topics, weights=topics_weights, k=1)[0]
+
+
+def choose_random_task(available_tasks):
+    return random.choice(available_tasks)
+
+
+def clear_screen():
+    _ = os.system('clear' if os.name =='posix' else 'cls')
+
+
+def get_window_width():
+    width, _ = os.get_terminal_size(0)
+    return width
+
+
+def print_task_on_screen(task, task_number):
+    screen_width = get_window_width()
+    hline = '─' * (screen_width - 2)
+    title_lines = textwrap.wrap('TASK {}'.format(task_number), screen_width - 2)
+    task_lines = textwrap.wrap(task, screen_width - 2, initial_indent=' ', subsequent_indent=' ')
+    footer_lines = textwrap.wrap('Press ENTER when you have finished the task', screen_width - 2)
+
+    clear_screen()
+    print('┌{1:^{0}}┐'.format(screen_width - 2, hline))
+    print('│{1:^{0}}│'.format(screen_width - 2, ''))
+    for l in title_lines:
+        print('│{1:^{0}}│'.format(screen_width - 2, l))
+    print('│{1:^{0}}│'.format(screen_width - 2, ''))
+    print('├{1:^{0}}┤'.format(screen_width - 2, hline))
+    print('│{1:^{0}}│'.format(screen_width - 2, ''))
+    for l in task_lines:
+        print('│{1:<{0}}│'.format(screen_width - 2, l))
+    print('│{1:^{0}}│'.format(screen_width - 2, ''))
+    print('│{1:^{0}}│'.format(screen_width - 2, ''))
+    print('│{1:^{0}}│'.format(screen_width - 2, ''))
+    print('│{1:^{0}}│'.format(screen_width - 2, ''))
+    print('│{1:^{0}}│'.format(screen_width - 2, ''))
+    for l in footer_lines:
+        print('│{1:^{0}}│'.format(screen_width - 2, l))
+    print('└{1:^{0}}┘'.format(screen_width - 2, hline))
+    print()
+
+
+def wait_for_user():
+    start_time = time.time()
+    input()
+    return time.time() - start_time
+
+
+def print_stats_on_screen(task_stats):
+    screen_width = get_window_width()
+    hline = '─' * (screen_width - 2)
+    title_lines = textwrap.wrap('FINAL STATS', screen_width - 2)
+
+    clear_screen()
+    print('┌{1:^{0}}┐'.format(screen_width - 2, hline))
+    print('│{1:^{0}}│'.format(screen_width - 2, ''))
+    for l in title_lines:
+        print('│{1:^{0}}│'.format(screen_width - 2, l))
+    print('│{1:^{0}}│'.format(screen_width - 2, ''))
+    for i in range(len(task_stats)):
+        first_col_width = int((screen_width - 5) * 0.15)
+        second_col_width = int((screen_width - 5) * 0.25)
+        fourth_col_width = int((screen_width - 5) * 0.15)
+        third_col_width = screen_width - 5 - first_col_width - second_col_width - fourth_col_width
+
+        first_col_text = textwrap.shorten('TASK {}'.format(i + 1), first_col_width)
+        second_col_text = textwrap.shorten(' {}'.format(task_stats[i][0]), second_col_width)
+        third_col_text = textwrap.shorten(' {}'.format(task_stats[i][1]), third_col_width)
+        task_min, task_sec = divmod(int(task_stats[i][2]), 60)
+        fourth_col_text = textwrap.shorten('{}min {}sec'.format(task_min, task_sec), fourth_col_width)
+        
+        if i == 0:
+            print('├{1:─^{0}}┬{3:─^{2}}┬{5:─^{4}}┬{7:─^{6}}┤'.format(
+                first_col_width, '', second_col_width, '',
+                third_col_width, '', fourth_col_width, ''))
+        else:
+            print('├{1:─^{0}}┼{3:─^{2}}┼{5:─^{4}}┼{7:─^{6}}┤'.format(
+                first_col_width, '', second_col_width, '',
+                third_col_width, '', fourth_col_width, ''))
+
+        print('│{1:^{0}}│{3:<{2}}│{5:<{4}}│{7:^{6}}│'.format(
+              first_col_width, first_col_text, second_col_width, second_col_text,
+              third_col_width, third_col_text, fourth_col_width, fourth_col_text))
+            
+    print('└{1:─^{0}}┴{3:─^{2}}┴{5:─^{4}}┴{7:─^{6}}┘'.format(
+                first_col_width, '', second_col_width, '',
+                third_col_width, '', fourth_col_width, ''))
+    print()
+
+
+
+def main():
+    tasks_data = parse_tasks_data(TASKS_FILE)
+    topics = get_topics(tasks_data)
+    topics_available_tasks = {t: get_topic_tasks(tasks_data, t) for t in topics }
+    all_tasks_amount = sum(len(x) for x in topics_available_tasks.values())
+    if all_tasks_amount < TASKS_AMOUNT:
+        print('Error: Not enought tasks on {} (expected {}, found {})'
+              .format(TASKS_FILE, TASKS_AMOUNT, all_tasks_amount))
+        return
+    task_number = 1
+    tasks_stats = []
+    while task_number <= TASKS_AMOUNT:
+        topic = choose_random_topic(tasks_data)
+        available_tasks = topics_available_tasks[topic]
+        if not available_tasks:
+            continue
+        task = choose_random_task(available_tasks)
+        print_task_on_screen(task, task_number)
+        task_time = wait_for_user()
+        tasks_stats.append((topic, task, task_time))
+        available_tasks.remove(task)
+        task_number += 1
+    print_stats_on_screen(tasks_stats)
+
+
+main()

@@ -1,0 +1,112 @@
+[ PODS & DEPLOYMENTS ]
+
+weight: 9
+
+T1: Create a busybox pod called 'reallybusy' which executes the command 'sleep 10' with a restartPolicy of Always. Verify the pod is continually recreated.
+
+T2: Label node 3 as 'chosenby=nginx'. Create a 2 replica deployment of nginx pods called 'ournginx' and allow them to run only on the previously labeled node. Verify the 2 replicas are running on node 3.
+
+T3: Label nodes 1 and 3 as 'animal=dog' and nodes 2 and 4 as 'animal=cat'. Create a 5 replica deployment of nginx pods called 'catlovers' and allow them to run only on the cat nodes. Verify all replicas are running on only nodes 2 and 4.
+
+T4: Create a 3 replica deployment of nginx:1.17.8 pods called 'oldnginx' with a recreate update strategy. Once they are all running, update their images to version 1.17.9 and verify all pods get updated at once.
+
+T5: Create a 2 replica deployment of nginx:1.17.8 pods called 'stabledeploy'. Once they are all running, update their images to version 1.17.9. After that, perform a rollout to previous version 1.17.8.
+
+T6: Create a busybox pod called 'sopositive' which executes the command 'yes'. Limit its CPU to 200m and its memory to 20Mi.
+
+T7: Create a busybox pod called 'membox' which executes the command 'sleep 3600' with a memory limit of 1Mi. Exec to the pod with '/bin/sh' and run the following command to allocate 2M of memory: '</dev/zero head -c 2000000 | tail'. After the command fails with an 'out of memory', recreate the pod with a new memory limit of 5Mi. Verify the previous command executes successfully now.
+
+T8: Create a busybox pod called 'limitbox' which executes the command 'sleep 3600'. The pod needs at least 300m of CPU and 10Mi of memory, and at most 500m of CPU and 20Mi of memory.
+
+T9: Create a pod running an nginx image with liveness and readiness HTTP probes on port 80. Make the probe periods 5 seconds and their initial delay 10 seconds. Verify the pod is running correctly after the probes.
+
+T10: Create an nginx pod with a liveness HTTP probe on port 80 every 10 seconds. Exec to the pod with '/bin/sh' and run the following command to delete the index page: 'rm /usr/share/nginx/html/index.html'. Verify the pod gets restarted by the probe after this.
+
+T11: Create a busybox pod called 'busyonfile' which executes the command 'sleep 3600' with a command startup probe on file '/tmp/busyfile'. Exec to the pod with '/bin/sh' and run the following command to create the file: 'touch /tmp/busyfile'. Verify the pod starts successfully after the creation of the file.
+
+
+[ SCHEDULING ]
+
+weight: 7
+
+T1: Taint nodes 1 and 2 as 'color=red:NoSchedule' and nodes 3 and 4 as 'color=blue:NoSchedule'. Create a 5 replica deployment of busybox pods called 'summerbox' which execute the command 'sleep 3600' and with a toleration for the red color but not for the blue one. Verify all 5 pods are scheduled into nodes 1 or 2 and remove all taints.
+
+T2: Taint nodes 1 and 2 as 'reservedby=alice:NoSchedule' and nodes 3 and 4 as 'reservedby=bob:NoSchedule'. Create two nginx deployments of 3 replicas each called 'alicepods' and 'bobpods', with respective tolerations 'reservedby=alice:NoSchedule' and 'reservedby=bob:NoSchedule'. Verify Alice and Bob pods are scheduled to their respective nodes and delete all taints.
+
+T3: Taint node 3 as 'forbid=one:NoSchedule' and node 4 as 'forbid=two:NoSchedule'. Create a 5 replica deployment of nginx pods called 'forbiddengingx' and verify no pod is scheduled into nodes 3 or 4. Edit the deployment and add only one toleration to allow the pods to be scheduled into 'forbid' nodes.
+
+T4: Label nodes 2 and 3 as 'box=busy'. Create a 5 replica deployment of busybox pods called 'boxbusy' which execute the command 'sleep 3600' and with a node affinity that will force pods to be scheduled into the previously labeled nodes. Verify all pods are scheduled into the nodes 2 and 3.
+
+T5: Create a 5 replica deployment of nginx pods called 'exclusivenginx' with a pod anti-affinity that will force each replica of the deployment to be scheduled on a different node. Verify each replica was scheduled into a different node and one replica is still in Pending.
+
+T6: Create two busybox deployments of 2 replicas each called 'fakedb' and 'fakebackend' which execute the command 'sleep 3600'. Use affinity and anti-affinity rules to ensure the fakedb pods are scheduled into different nodes, and to ensure that fakebackend pods can only be scheduled on nodes with fakedb pods.
+
+T7: Label node 1 and 2 as 'lang=zh', node 3 as 'lang=en' and node 4 as 'lang=fr'. Create a 5 replica deployment of nginx pods called 'europeanginx' with a node affinity that will force pods to be scheduled on nodes with 'lang' label as 'en', 'fr' or 'es'. Verify pods are only scheduled to nodes 3 and 4.
+
+
+[ CONFIGMAPS AND SECRETS ]
+
+weight: 6
+
+T1: Create a configmap called 'busyshapes' with two properties 'shape1' and 'shape2' set to 'square' and 'circle'. Create a busybox pod called 'busysquare' and another one called 'busycircle' which both execute the command 'sleep 3600'. Make each pod receive the values of 'shape1' and 'shape2' respectively as a 'shape' env variable. Exec into them with '/bin/sh' and execute the command 'env | grep shape' to verify each pod has received their corresponding configuration.
+
+T2: Create a JSON file called 'animals.json' with the following content: '{animal1: dog, animal2: cat}'. Create a configmap named 'busyanimalscm' from the previous JSON. Create a busybox pod called 'busyanimals' which executes the command 'cat /etc/config/animals && sleep 3600' and that mounts the previously defined configmap into the '/etc/config/animals' file. Verify the animals are printed on the logs of the pod.
+
+T3: Create an env file called 'colors.env' with keys 'color1=white' and 'color2=black'. Create a confimap named 'busycolorscm' from the previous file. Create a 2 replica deployment of busybox pods called 'busycolors' which execute the command 'env && sleep 3600' and that receive all the keys and values from the previously defined configmap as env variables. Verify the colors are printed on the logs of the pods.
+
+T4: Create a secret called 'secretcredentials' with two properties 'username' and 'password' set to 'admin' and '4Dm1N'. Create a busybox pod called 'busywithcredentials' which executes the command 'sleep 3600' and that receives the values of the username and password as env variables. Exec into the pod with '/bin/sh' and execute the command 'env' to verify the credentials have been injected successfully.
+
+T5: Create a secret called 'secrepasswords' with two properties 'dbpassword' and 'backendpassword' set to 'dbpass' and 'backendpass'. Create a busybox pod called 'busybackendpassword' which executes the command 'cat /etc/config/password && sleep 3600' and that receives the 'backendpassword' secret into the '/etc/config/password' file. Verify the password is printed on the logs of the pod.
+
+
+[ RBAC ]
+
+weight: 8
+
+T1: Create a role called 'podreaderrole' that grants all read access to pods. Create a service account named 'podreadersa' and bind the previously created role to it. Use the 'kubectl auth' command to validate the service account can read pods but cannot create nor delete them.
+
+T2: Create a role called 'backendconfigrole' that grants get access to two configmaps called 'mysqlconfigmap' and 'extapiconfigmap'. Create a service account named 'backendsa' and bind the previously created role to it. Use 'kubectl auth' command to validate the service account can read the two configmaps but it cannot read a configmap called 'frontendconfigmap'.
+
+T3: Create a role called 'simpleoperatorrole' that grants all read access to pods, deployments and pods logs. Create a service account named 'simpleoperatorsa' and bind the previously created role to it. Use 'kubectl auth' command to validate the service account can read the resources but cannot create nor delete them.
+
+T4: Create a cluster role named 'jobmonitorrole' that grants read access to jobs and pods on all namespaces. Create a service account named 'jobmonitorsa' and bind the previously created role to it. Use 'kubectl auth' command to validate the service account can read pods in all namespaces but cannot create nor delete them.
+
+T5: Create a cluster role named 'clustermonitorrole' that grants get access to the '/healthz' endpoint of the API. Create a service account named 'clusterrolemonitorsa' and bind the previously created role to it. Use 'kubectl auth' command to validate the service account created can perform a GET to the endpoint but cannot perform a POST to it, nor a GET to '/healthz/foo'.
+
+T6: Create a cluster role named 'nodesreaderrole' that grats all read access to nodes of the cluster. Create a service account named 'nodesreadersa' and bind the previously created role to it. Use the 'kubectl auth' command to validate the service account can read nodes but cannot delete them.
+
+
+[ SERVICES AND INGRESSES ]  
+
+weight: 6
+
+T1: Create a 3 replica deployment of nginx pods called 'nodedportnginx'. Expose them via a NodePort service on port 32864. Verify the nginx pods are accessible on that port, and validate the requests are routed to different pods by checking the nginx logs.
+
+T2: Create two nginx deployments of 3 replicas each called 'backenginx' and 'frontenginx'. Expose the backend pods with a ClusterIp service and the frontend pods with a LoadBalancer service. Verify the frontend pods are accessible on the load balancer provisioned IP. Exec into a frontend pod with '/bin/bash' and validate it can reach the backend pod on the ClusterIp service.
+
+T3: Create two nginx deployments of 2 replicas each called 'applenginx' and 'banananginx' and expose them with two ClusterIp services. Create an ingress with two paths '/apple' and '/banana' that will route the requests to the apple and banana nginx pods. Verify the requests are routed correctly by checking the nginx logs.
+
+
+[ JOBS, CRONJOBS, DAEMONSETS AND STATEFULSETS ]
+
+weight: 5
+
+T1: Create a job called 'successfuldatejob' with the busybox image which executes the command '/bin/sh -c "sleep 20 && date"' and has a restart policy of OnFailure. Delete the created pod before it completes, and verify the job is retriggered again and the date is logged.
+
+T2: Create a job called 'failoopjob' with the busybox image which executes the command '/bin/sh -c "sleep 5 && false"' and has a restart policy of OnFailure. Validate the job gets continuously retriggered with an Error state. Change the job to execute the command '/bin/sh -c "sleep 5 && true"' and verify it can now complete successfully.
+
+T3: Create a cronjob called 'node2datecj' with the busybox image which executes the command '/bin/sh -c "date"' every minute and whose pods can only be scheduled to node 2. Verify the pods of the cronjob are executed successfully on node 2.
+
+T4: Create a 3 replica statefulset of nginx pods called 'nginxstatefulset' with a restartPolicy of Never and a headless service called 'nginxstatefulsetsvc'. Exec to the second replica of the statefulset with '/bin/sh' and run the following command to delete the index page: 'rm /usr/share/nginx/html/index.html'. Try to scale the statefulset to 4 and verify this cannot be done.
+
+
+[ STORAGE ]
+
+weight: 6
+
+T1: Create a pod called 'dateserverpod' with both an nginx and a busybox container. The busybox container must run the command '/bin/sh -c "while true; do date >> /html/index.html; sleep 1; done"'. Use an emptyDir volume to share the '/html' folder with the nginx pod, which will need to mount it on '/usr/share/nginx/html'. Verify the contents of the 'index.html' file of the nginx pod are updated every second.
+
+T2: Create a 1 replica deployment of nginx pods called 'retainginx' and a persistent volume called 'retainginxpv'. Make the deployment pod claim the persistent volume with a Retain reclame policy. Exec into the pod with '/bin/bash' and create a file inside the volume. Delete the pod, exec into the new nginx and verify the created file still exists in the volume.
+
+T3: Create a 1 replica deployment of nginx pods called 'resizenginx' and a persistent volume called 'resizenginxpv' of 200MB. Make the deployment pod claim the persistent volume but requesting only 100MB of space. Verify the volume was mounted successfully and resize the claim to request 180MB of the volume.
+
