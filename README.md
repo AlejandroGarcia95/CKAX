@@ -6,7 +6,7 @@ _CKAX_ is a small but useful Python script that will present you with a series o
 
 ## Assumptions and requirements
 
-- _CKAX_ has been tested on an Ubunutu 18.04 machine, but most likely any machine with `python3.6` should be able to run it without problems.
+- _CKAX_ has been tested on an Ubuntu 18.04 machine, but most likely any machine with `python3.6` should be able to run it without problems.
 - All the tasks defined assume you have a cluster of 4 nodes. If you have a different amount of nodes in your cluster, please focus on what the task wants you to achieve to adapt it to your scenario.
 
 ## Usage
@@ -47,7 +47,7 @@ TASKS_AMOUNT=10 TASKS_FILE=/home/ubuntu/mytasks python3 ckax
 
 ## Tasks file
 
-Tasks are randomly chosen from a tasks file, which groups them into categories. Each category has a relative `weight` so the script will select them based on those weights (a weight of 0 will result in a category never getting selected, so you can edit the task file to disable a category questions). Inside a category, all questions can be randomly picked with equal probability.
+Tasks are randomly chosen from a tasks file, which groups them into categories. Each category has a relative `weight` so the script will select them based on those weights. A weight of 0 will result in a category never getting selected, so you can edit the task file to disable any category. Inside a category, all questions can be randomly picked with equal probability.
 
 The task file format follows the next structure:
 
