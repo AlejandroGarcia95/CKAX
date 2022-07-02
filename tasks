@@ -1,6 +1,6 @@
 [ PODS & DEPLOYMENTS ]
 
-weight: 9
+weight: 7
 
 T1: Create a busybox pod called 'reallybusy' which executes the command 'sleep 10' with a restartPolicy of Always. Verify the pod is continually recreated.
 
@@ -14,7 +14,7 @@ T5: Create a 2 replica deployment of nginx:1.17.8 pods called 'stabledeploy'. On
 
 T6: Create a busybox pod called 'sopositive' which executes the command 'yes'. Limit its CPU to 200m and its memory to 20Mi.
 
-T7: Create a busybox pod called 'membox' which executes the command 'sleep 3600' with a memory limit of 1Mi. Exec to the pod with '/bin/sh' and run the following command to allocate 2M of memory: '</dev/zero head -c 2000000 | tail'. After the command fails with an 'out of memory', recreate the pod with a new memory limit of 5Mi. Verify the previous command executes successfully now.
+T7: Create a busybox pod called 'membox' which executes the command 'sleep 3600' with a memory limit of 10Mi. Exec to the pod with '/bin/sh' and run the following command to allocate 20M of memory: '</dev/zero head -c 20000000 | tail'. After the command fails with an 'out of memory', recreate the pod with a new memory limit of 50Mi. Verify the previous command executes successfully now.
 
 T8: Create a busybox pod called 'limitbox' which executes the command 'sleep 3600'. The pod needs at least 300m of CPU and 10Mi of memory, and at most 500m of CPU and 20Mi of memory.
 
@@ -27,7 +27,7 @@ T11: Create a busybox pod called 'busyonfile' which executes the command 'sleep 
 
 [ SCHEDULING ]
 
-weight: 7
+weight: 6
 
 T1: Taint nodes 1 and 2 as 'color=red:NoSchedule' and nodes 3 and 4 as 'color=blue:NoSchedule'. Create a 5 replica deployment of busybox pods called 'summerbox' which execute the command 'sleep 3600' and with a toleration for the red color but not for the blue one. Verify all 5 pods are scheduled into nodes 1 or 2 and remove all taints.
 
@@ -46,7 +46,7 @@ T7: Label node 1 and 2 as 'lang=zh', node 3 as 'lang=en' and node 4 as 'lang=fr'
 
 [ CONFIGMAPS AND SECRETS ]
 
-weight: 6
+weight: 3
 
 T1: Create a configmap called 'busyshapes' with two properties 'shape1' and 'shape2' set to 'square' and 'circle'. Create a busybox pod called 'busysquare' and another one called 'busycircle' which both execute the command 'sleep 3600'. Make each pod receive the values of 'shape1' and 'shape2' respectively as a 'shape' env variable. Exec into them with '/bin/sh' and execute the command 'env | grep shape' to verify each pod has received their corresponding configuration.
 
@@ -56,16 +56,16 @@ T3: Create an env file called 'colors.env' with keys 'color1=white' and 'color2=
 
 T4: Create a secret called 'secretcredentials' with two properties 'username' and 'password' set to 'admin' and '4Dm1N'. Create a busybox pod called 'busywithcredentials' which executes the command 'sleep 3600' and that receives the values of the username and password as env variables. Exec into the pod with '/bin/sh' and execute the command 'env' to verify the credentials have been injected successfully.
 
-T5: Create a secret called 'secrepasswords' with two properties 'dbpassword' and 'backendpassword' set to 'dbpass' and 'backendpass'. Create a busybox pod called 'busybackendpassword' which executes the command 'cat /etc/config/password && sleep 3600' and that receives the 'backendpassword' secret into the '/etc/config/password' file. Verify the password is printed on the logs of the pod.
+T5: Create a secret called 'secrepasswords' with two properties 'dbpassword' and 'backendpassword' set to 'dbpass' and 'backendpass'. Create a busybox pod called 'busybackendpassword' which executes the command 'while true; do echo "Password is: " && cat /etc/config/password && sleep 120 ; done' and that receives the 'backendpassword' secret into the '/etc/config/password' file. Verify the password is printed on the logs of the pod.
 
 
 [ RBAC ]
 
-weight: 8
+weight: 6
 
 T1: Create a role called 'podreaderrole' that grants all read access to pods. Create a service account named 'podreadersa' and bind the previously created role to it. Use the 'kubectl auth' command to validate the service account can read pods but cannot create nor delete them.
 
-T2: Create a role called 'backendconfigrole' that grants get access to two configmaps called 'mysqlconfigmap' and 'extapiconfigmap'. Create a service account named 'backendsa' and bind the previously created role to it. Use 'kubectl auth' command to validate the service account can read the two configmaps but it cannot read a configmap called 'frontendconfigmap'.
+T2: Create a role called 'backendconfigrole' that grants get access to two configmaps called 'mysqlconfigmap' and 'extapiconfigmap'. Create a service account named 'backendsa' and bind the previously created role to it. Create the configmaps 'mysqlconfigmap', 'extapiconfigmap' and 'frontendconfigmap', and validate the service account can read the first two but not the third.
 
 T3: Create a role called 'simpleoperatorrole' that grants all read access to pods, deployments and pods logs. Create a service account named 'simpleoperatorsa' and bind the previously created role to it. Use 'kubectl auth' command to validate the service account can read the resources but cannot create nor delete them.
 
@@ -80,7 +80,7 @@ T6: Create a cluster role named 'nodesreaderrole' that grats all read access to 
 
 weight: 6
 
-T1: Create a 3 replica deployment of nginx pods called 'nodedportnginx'. Expose them via a NodePort service on port 32864. Verify the nginx pods are accessible on that port, and validate the requests are routed to different pods by checking the nginx logs.
+T1: Create a 3 replica deployment of nginx pods called 'nodedportnginx'. Expose them via a NodePort service on port 31864. Verify the nginx pods are accessible on that port, and validate the requests are routed to different pods by checking the nginx logs.
 
 T2: Create two nginx deployments of 3 replicas each called 'backenginx' and 'frontenginx'. Expose the backend pods with a ClusterIp service and the frontend pods with a LoadBalancer service. Verify the frontend pods are accessible on the load balancer provisioned IP. Exec into a frontend pod with '/bin/bash' and validate it can reach the backend pod on the ClusterIp service.
 
@@ -89,7 +89,7 @@ T3: Create two nginx deployments of 2 replicas each called 'applenginx' and 'ban
 
 [ JOBS, CRONJOBS, DAEMONSETS AND STATEFULSETS ]
 
-weight: 5
+weight: 3
 
 T1: Create a job called 'successfuldatejob' with the busybox image which executes the command '/bin/sh -c "sleep 20 && date"' and has a restart policy of OnFailure. Delete the created pod before it completes, and verify the job is retriggered again and the date is logged.
 
@@ -97,12 +97,12 @@ T2: Create a job called 'failoopjob' with the busybox image which executes the c
 
 T3: Create a cronjob called 'node2datecj' with the busybox image which executes the command '/bin/sh -c "date"' every minute and whose pods can only be scheduled to node 2. Verify the pods of the cronjob are executed successfully on node 2.
 
-T4: Create a 3 replica statefulset of nginx pods called 'nginxstatefulset' with a restartPolicy of Never and a headless service called 'nginxstatefulsetsvc'. Exec to the second replica of the statefulset with '/bin/sh' and run the following command to delete the index page: 'rm /usr/share/nginx/html/index.html'. Try to scale the statefulset to 4 and verify this cannot be done.
+T4: Create a 3 replica statefulset of nginx pods called 'nginxstatefulset' and a headless service called 'nginxstatefulsetsvc'. Scale the statefulset to 4, recording the action. Once all pods are up, rollback the statefulset to the previous 3-replica version.
 
 
 [ STORAGE ]
 
-weight: 6
+weight: 3
 
 T1: Create a pod called 'dateserverpod' with both an nginx and a busybox container. The busybox container must run the command '/bin/sh -c "while true; do date >> /html/index.html; sleep 1; done"'. Use an emptyDir volume to share the '/html' folder with the nginx pod, which will need to mount it on '/usr/share/nginx/html'. Verify the contents of the 'index.html' file of the nginx pod are updated every second.
 
